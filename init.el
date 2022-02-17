@@ -27,18 +27,32 @@
 ;; show matching parenthesis
 (show-paren-mode 1)
 
-;; uncomment this to show fringes, eg : symbol shown when a line is wrapped
-;; (set-fringe-mode 10)
-
 ;; hightlight current line
 (global-hl-line-mode t)
-
-;; show line numbers
-(require 'display-line-numbers)
-(global-display-line-numbers-mode t)
+;; display line numbers globally
+(global-display-line-numbers-mode 1)
+;; disable line numbers in some modes
+(dolist (modes '(org-mode-hook
+                 term-mode-hook
+                 shell-mode-hook
+                 eshell-mode-hook))
+  (add-hook modes (lambda () (display-line-numbers-mode 0))))
 
 ;; enable visual bell
 (setq-default visual-bell t)
+
+;; these functions will be executed after emacs init completes
+(add-hook 'emacs-startup-hook
+	  ;; show startup time
+	  ;; Use a hook so the message doesn't get clobbered by other messages.
+          (lambda ()
+	        (message "Emacs ready in %s with %d garbage collections."
+		             (format "%.4f seconds" (float-time
+					                         (time-subtract after-init-time before-init-time)))
+                     gcs-done))
+	      ;; Make gc pauses faster by decreasing the threshold.
+	      (setq gc-cons-threshold (expt 2 23)))
+
 
 ;; initialize package sources
 (require 'package)
@@ -73,7 +87,7 @@
 
 ;; load theme
 (use-package soothe-theme
-  :defer t ;; load this immidiately
+  :defer 2 ;; load this immidiately
   :init (load-theme 'soothe))
 
 ;; setup ivy for code completion
@@ -99,24 +113,10 @@
   (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
 
-(use-package ivy
-  :diminish
-  :bind (("C-s" . swiper)
-	 :map ivy-minibuffer-map
-	 ("TAB" . ivy-alt-done)
-	 ("C-l" . ivy-alt-done)
-	 ("C-j" . ivy-next-line)
-	 ("C-k" . ivy-previous-line)
-	 :map ivy-switch-buffer-map
-	 ("C-k" . ivy-previous-line)
-	 ("C-l" . ivy-switch-buffer-kill)
-	 :map ivy-reverse-i-search-map
-	 ("C-k" . ivy-previous-line)
-	 ("C-d" . ivy-reverse-i-search-kill))
-  :config
-  ;; doing this will setup necessary key bindings globally
-  ;; this will improve file search prompt, buffer list display and all fancy stuffs
-  (ivy-mode 1))
+;; provide more ivy features
+(use-package ivy-rich
+  :defer 2
+  :init (ivy-rich-mode 1))
 
 ;; make modeline feel better
 (use-package doom-modeline
@@ -124,17 +124,28 @@
   :defer 2
   :hook (after-init . doom-modeline-mode))
 
-;; these functions will be executed
-(add-hook 'emacs-startup-hook
-	  ;; show startup time
-	  ;; Use a hook so the message doesn't get clobbered by other messages.
-          (lambda ()
-	    (message "Emacs ready in %s with %d garbage collections."
-		     (format "%.4f seconds" (float-time
-					     (time-subtract after-init-time before-init-time)))
-                     gcs-done))
-	  ;; Make gc pauses faster by decreasing the threshold.
-	  (setq gc-cons-threshold (expt 2 23)))
+;; be evil
+(use-package evil
+  :defer 2
+  :init (evil-mode 1)
+  :ensure t)
+
+;; make parenthesis look better
+;; different colors for different level of parenthesis
+(use-package rainbow-delimiters
+  :defer 2
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; write a keybinding partially and emacs will show you
+;; different options available to complete the binding
+(use-package which-key
+  :defer 2
+  :init (which-key-mode)
+  :config (setq which-key-idle-delay 1))
+
+;; don't delete files immidiately
+(setq trash-directory "~/.trash")
+(setq delete-by-moving-to-trash t)
 
 ;; emacs creates backup files that end with a ~
 ;; we don't want to turn of backup as they are useful sometimes (in some very bad times)
@@ -146,3 +157,18 @@
       delete-old-versions    t  ; Automatically delete excess backups:
       kept-new-versions      20 ; how many of the newest versions to keep
       kept-old-versions      5) ; and how many of the old
+
+;; better help for emacs stuff
+(use-package helpful
+  :defer t
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describle-function] . counsel-describe-function)
+  ([remap describle-command] . helpful-command)
+  ([remap describle-variable] . counsel-describe-variable)
+  ([remap describle-key] . helpful-key)) 
+
+;; use doom emacs themes
+(use-package doom-themes)
