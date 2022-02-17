@@ -4,7 +4,7 @@
 (setq gc-cons-threshold most-positive-fixnum)
 
 ;; don't show startup screen
-(setq inhibit-startup-message t)
+(setq-default inhibit-startup-message t)
 
 ;; disable toolbar and scrollbar
 ;; these are minor modes so they take -1 and not nil
@@ -13,11 +13,17 @@
 (menu-bar-mode -1)
 
 ;; jit settings
+;; idk really about this, got this from a blogpost
 (setq jit-lock-stealth-time nil)
 (setq jit-lock-defer-time nil)
 (setq jit-lock-defer-time 0.05)
 (setq jit-lock-stealth-load 200)
 
+;; never use tabs (only spaces)
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq c-basic-offset 4)
+    
 ;; show matching parenthesis
 (show-paren-mode 1)
 
@@ -32,7 +38,7 @@
 (global-display-line-numbers-mode t)
 
 ;; enable visual bell
-(setq visual-bell t)
+(setq-default visual-bell t)
 
 ;; initialize package sources
 (require 'package)
@@ -129,3 +135,14 @@
                      gcs-done))
 	  ;; Make gc pauses faster by decreasing the threshold.
 	  (setq gc-cons-threshold (expt 2 23)))
+
+;; emacs creates backup files that end with a ~
+;; we don't want to turn of backup as they are useful sometimes (in some very bad times)
+;; Write backups to ~/.emacs.d/backup/
+;; source : https://superuser.com/questions/236883/why-does-emacs-create-a-file-that-starts-with
+(setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
+      backup-by-copying      t  ; Don't de-link hard
+      version-control        t  ; Use version numbers on backups
+      delete-old-versions    t  ; Automatically delete excess backups:
+      kept-new-versions      20 ; how many of the newest versions to keep
+      kept-old-versions      5) ; and how many of the old
