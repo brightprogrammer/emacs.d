@@ -1,4 +1,5 @@
 elpa/
 melpa/
 orgmode/
+custom.el
 *~
