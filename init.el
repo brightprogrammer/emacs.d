@@ -85,15 +85,15 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file)
 
-;; load theme
+;; load theme instantly
 (use-package soothe-theme
-  :defer 2 ;; load this immidiately
-  :init (load-theme 'soothe))
+  :defer nil ;; load this immidiately
+  :init (load-theme 'soothe t)) ;; don't prompt and load immidiately
 
 ;; setup ivy for code completion
 (use-package ivy
   :defer 2 ;; load this after 2 seconds of idle time
-  :init (ivy-mode) ;; enable ivy mode
+  :hook (after-init . ivy-mode) ;; enable ivy mode
   :config
   (global-set-key "\C-s" 'swiper)
   (global-set-key (kbd "C-c C-r") 'ivy-resume)
@@ -111,36 +111,34 @@
   (global-set-key (kbd "C-c k") 'counsel-ag)
   (global-set-key (kbd "C-x l") 'counsel-locate)
   (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+  (global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
 
 ;; provide more ivy features
 (use-package ivy-rich
   :defer 2
-  :init (ivy-rich-mode 1))
+  :hook (after-mode . ivy-rich-mode))
 
 ;; make modeline feel better
 (use-package doom-modeline
-  :ensure t
   :defer 2
   :hook (after-init . doom-modeline-mode))
 
 ;; be evil
 (use-package evil
   :defer 2
-  :init (evil-mode 1)
-  :ensure t)
+  :hook (after-init . evil-mode))
 
 ;; make parenthesis look better
 ;; different colors for different level of parenthesis
 (use-package rainbow-delimiters
-  :defer 2
+  :defer t
   :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; write a keybinding partially and emacs will show you
 ;; different options available to complete the binding
 (use-package which-key
   :defer 2
-  :init (which-key-mode)
   :config (setq which-key-idle-delay 1))
 
 ;; don't delete files immidiately
@@ -160,7 +158,7 @@
 
 ;; better help for emacs stuff
 (use-package helpful
-  :defer t
+  :defer 3
   :custom
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
@@ -172,3 +170,34 @@
 
 ;; use doom emacs themes
 (use-package doom-themes)
+
+;; help us expand macro and see what's actually going on under hood
+(use-package macrostep
+  :defer 2
+  :config
+  (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand))
+;; The standard keybindings in macrostep-mode are the following:
+;; [e, =, RET]  : expand the macro form following point one step
+;; [c, u, DEL]  : collapse the form following point
+;; [q, C-c C-c] : collapse all expanded forms and exit macrostep-mode
+;; [n, TAB]     : jump to the next macro form in the expansion
+;; [p, M-TAB]   : jump to the previous macro form in the expansion
+
+;; we want icons everywhere
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :commands all-the-icons-install-fonts ;; install fonts if not present
+  :init
+  ;; installs this font only if it is not found
+  (unless (find-font (font-spec :name "all-the-icons"))
+    (all-the-icons-install-fonts t)))
+
+;; icons also in dired mode
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+;; general key bindings
+;; (use-package general
+;;   :defer t
+;;   :hook (evil-mode . (general-evil-setup)))
